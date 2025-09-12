@@ -1,10 +1,18 @@
 exports.handler = async (event, context) => {
   const params = event.queryStringParameters || {};
   
-  // Your Stripe secret key (you'll add this)
-  const STRIPE_SECRET_KEY = 'sk_live_YOUR_KEY_HERE';
+  // Get key from environment variable (secure)
+  const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
   
-  // Price calculation logic (same as your Zap)
+  if (!STRIPE_SECRET_KEY) {
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'text/html' },
+      body: '<h1>Configuration Error</h1>'
+    };
+  }
+  
+  // Price calculation
   const packagePrices = {
     'Photography / Full Coverage - €500': 500,
     'Photography / Two Classes + Candids - €325': 325,
@@ -20,19 +28,16 @@ exports.handler = async (event, context) => {
     'Video Add-On / Clips+Reel - €350': 350
   };
 
-  // Calculate total
-  const packageName = params.package || '';
+  const packageName = params.package || 'Photography / Full Coverage - €500';
   const addonName = params.addons || '';
   
   let totalAmount = packagePrices[packageName] || 500;
   
-  // Add-ons only for Full Coverage
   if (packageName.includes('Full Coverage') && addonName) {
     totalAmount += addonPrices[addonName] || 0;
   }
 
   try {
-    // Create Stripe checkout session directly
     const checkoutSession = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
       headers: {
@@ -55,21 +60,6 @@ exports.handler = async (event, context) => {
 
     const session = await checkoutSession.json();
     
-    // Still trigger Zapier for record keeping (optional)
-    fetch('https://hooks.zapier.com/hooks/catch/24584121/um346uh/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: params.name || '',
-        e_mail: params.email || '',
-        choose_a_package: packageName,
-        video_add_ons: addonName,
-        horses_name: params.horse || '',
-        choose_the_event: params.event || ''
-      })
-    }).catch(() => {});
-
-    // Redirect to Stripe checkout
     return {
       statusCode: 302,
       headers: { 'Location': session.url }
