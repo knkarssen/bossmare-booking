@@ -11,38 +11,33 @@ exports.handler = async (event, context) => {
     };
   }
   
-  // More flexible price matching
   const packageName = params.package || 'Photography / Full Coverage - €500';
   let totalAmount = 500; // default
   
-  // Simple matching logic
+  // Match packages for pricing only
   if (packageName.includes('Full Coverage')) {
     totalAmount = 500;
-  } else if (packageName.includes('Two Classes + Candids')) {
+  } else if (packageName.includes('2 Classes + Candids')) {
     totalAmount = 325;
-  } else if (packageName.includes('Two Classes')) {
+  } else if (packageName.includes('2 Classes')) {
     totalAmount = 250;
-  } else if (packageName.includes('Single Class')) {
+  } else if (packageName.includes('1 Class')) {
     totalAmount = 175;
-  } else if (packageName.includes('Video-Only') && packageName.includes('Clips')) {
-    totalAmount = 350;
-  } else if (packageName.includes('Video-Only') && packageName.includes('Reel')) {
+  } else if (packageName.includes('Video / Reel + Clips')) {
     totalAmount = 500;
   }
 
   // Add-ons (only for Full Coverage)
   const addonName = params.addons || '';
   if (packageName.includes('Full Coverage') && addonName) {
-    if (addonName.includes('Clips') && addonName.includes('Reel')) {
+    if (addonName.includes('Video Add-On / Reel + Clips')) {
       totalAmount += 350;
-    } else if (addonName.includes('Reel')) {
+    } else if (addonName.includes('Video Add-On / Reel')) {
       totalAmount += 250;
-    } else if (addonName.includes('Clips')) {
+    } else if (addonName.includes('Video Add-On / Clips')) {
       totalAmount += 150;
     }
   }
-
-  console.log('Package:', packageName, 'Total:', totalAmount);
 
   try {
     const checkoutSession = await fetch('https://api.stripe.com/v1/checkout/sessions', {
@@ -54,7 +49,7 @@ exports.handler = async (event, context) => {
       body: new URLSearchParams({
         'mode': 'payment',
         'line_items[0][price_data][currency]': 'eur',
-        'line_items[0][price_data][product_data][name]': `Photography Package - ${params.horse || 'Package'}`,
+        'line_items[0][price_data][product_data][name]': `Photography Package - ${params.horse || 'Horse'}`,
         'line_items[0][price_data][unit_amount]': (totalAmount * 100).toString(),
         'line_items[0][quantity]': '1',
         'success_url': 'https://bossmaremedia.com/booking-success',
@@ -67,21 +62,16 @@ exports.handler = async (event, context) => {
 
     const session = await checkoutSession.json();
     
-    if (session.url) {
-      return {
-        statusCode: 302,
-        headers: { 'Location': session.url }
-      };
-    } else {
-      throw new Error('No checkout URL returned');
-    }
+    return {
+      statusCode: 302,
+      headers: { 'Location': session.url }
+    };
 
   } catch (error) {
-    console.error('Error:', error);
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'text/html' },
-      body: `<h1>Error</h1><p>Package: ${packageName}</p><p>Error: ${error.message}</p>`
+      body: `<h1>Error</h1><p>${error.message}</p>`
     };
   }
 };
