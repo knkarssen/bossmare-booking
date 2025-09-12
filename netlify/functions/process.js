@@ -1,7 +1,6 @@
 exports.handler = async (event, context) => {
   const params = event.queryStringParameters || {};
   
-  // Get key from environment variable (secure)
   const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
   
   if (!STRIPE_SECRET_KEY) {
@@ -12,30 +11,38 @@ exports.handler = async (event, context) => {
     };
   }
   
-  // Price calculation
-  const packagePrices = {
-    'Photography / Full Coverage - €500': 500,
-    'Photography / Two Classes + Candids - €325': 325,
-    'Photography / Two Classes - €250': 250,
-    'Photography / Single Class - €175': 175,
-    'Video-Only / Clips - €350': 350,
-    'Video-Only / Reel + Clips - €500': 500
-  };
-
-  const addonPrices = {
-    'Video Add-On / Clips - €150': 150,
-    'Video Add-On / Reel - €250': 250,
-    'Video Add-On / Clips+Reel - €350': 350
-  };
-
+  // More flexible price matching
   const packageName = params.package || 'Photography / Full Coverage - €500';
-  const addonName = params.addons || '';
+  let totalAmount = 500; // default
   
-  let totalAmount = packagePrices[packageName] || 500;
-  
-  if (packageName.includes('Full Coverage') && addonName) {
-    totalAmount += addonPrices[addonName] || 0;
+  // Simple matching logic
+  if (packageName.includes('Full Coverage')) {
+    totalAmount = 500;
+  } else if (packageName.includes('Two Classes + Candids')) {
+    totalAmount = 325;
+  } else if (packageName.includes('Two Classes')) {
+    totalAmount = 250;
+  } else if (packageName.includes('Single Class')) {
+    totalAmount = 175;
+  } else if (packageName.includes('Video-Only') && packageName.includes('Clips')) {
+    totalAmount = 350;
+  } else if (packageName.includes('Video-Only') && packageName.includes('Reel')) {
+    totalAmount = 500;
   }
+
+  // Add-ons (only for Full Coverage)
+  const addonName = params.addons || '';
+  if (packageName.includes('Full Coverage') && addonName) {
+    if (addonName.includes('Clips') && addonName.includes('Reel')) {
+      totalAmount += 350;
+    } else if (addonName.includes('Reel')) {
+      totalAmount += 250;
+    } else if (addonName.includes('Clips')) {
+      totalAmount += 150;
+    }
+  }
+
+  console.log('Package:', packageName, 'Total:', totalAmount);
 
   try {
     const checkoutSession = await fetch('https://api.stripe.com/v1/checkout/sessions', {
@@ -47,7 +54,7 @@ exports.handler = async (event, context) => {
       body: new URLSearchParams({
         'mode': 'payment',
         'line_items[0][price_data][currency]': 'eur',
-        'line_items[0][price_data][product_data][name]': `Photography Package - ${params.horse || 'Horse'}`,
+        'line_items[0][price_data][product_data][name]': `Photography Package - ${params.horse || 'Package'}`,
         'line_items[0][price_data][unit_amount]': (totalAmount * 100).toString(),
         'line_items[0][quantity]': '1',
         'success_url': 'https://bossmaremedia.com/booking-success',
@@ -60,16 +67,21 @@ exports.handler = async (event, context) => {
 
     const session = await checkoutSession.json();
     
-    return {
-      statusCode: 302,
-      headers: { 'Location': session.url }
-    };
+    if (session.url) {
+      return {
+        statusCode: 302,
+        headers: { 'Location': session.url }
+      };
+    } else {
+      throw new Error('No checkout URL returned');
+    }
 
   } catch (error) {
+    console.error('Error:', error);
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'text/html' },
-      body: `<h1>Error</h1><p>${error.message}</p>`
+      body: `<h1>Error</h1><p>Package: ${packageName}</p><p>Error: ${error.message}</p>`
     };
   }
 };
