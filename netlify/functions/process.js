@@ -15,30 +15,25 @@ exports.handler = async (event, context) => {
     let totalAmount = 0;
     let horseDetails = [];
     
-    // Map actual Paperform field IDs to horses
-    const horses = [
-      { name: params.bg538, package: params.ak367, addon: params['9cov'] },      // Horse 1
-      { name: params.ciq1t, package: params.endve, addon: params['4runf'] },     // Horse 2  
-      { name: params.c6i0e, package: params['6t296'], addon: params.m9fk },      // Horse 3
-      { name: params['3tq10'], package: params['97bea'], addon: params.b7o0r },  // Horse 4
-      { name: params['1tqls'], package: params['5gesj'], addon: params.cokbc }   // Horse 5
-    ];
-    
-    // Process each horse
-    horses.forEach((horse, index) => {
+    // Process up to 5 horses using CORRECT field names
+    for (let i = 1; i <= 5; i++) {
+      const horseName = params[`horse${i}name`];
+      const horsePackage = params[`horse${i}package`];
+      const horseAddon = params[`horse${i}addon`];
+      
       // Skip if no horse name or package
-      if (!horse.name || !horse.package) return;
+      if (!horseName || !horsePackage) continue;
       
       // Clean up encoding
-      let packageName = horse.package.replace(/â‚¬/g, '€');
-      let addonName = (horse.addon || '').replace(/â‚¬/g, '€');
+      let packageName = horsePackage.replace(/â‚¬/g, '€').replace(/\s+/g, ' ').trim();
+      let addonName = (horseAddon || '').replace(/â‚¬/g, '€');
       
       let horseAmount = 500; // default
       
-      // Package pricing
+      // Package pricing (handle extra spaces)
       if (packageName.includes('Full Coverage')) {
         horseAmount = 500;
-      } else if (packageName.includes('2 Classes + Candids')) {
+      } else if (packageName.includes('2 Classes') && packageName.includes('Candids')) {
         horseAmount = 325;
       } else if (packageName.includes('2 Classes') && !packageName.includes('Candids')) {
         horseAmount = 250;
@@ -60,15 +55,15 @@ exports.handler = async (event, context) => {
       }
       
       totalAmount += horseAmount;
-      horseDetails.push(`${horse.name} (€${horseAmount})`);
-    });
+      horseDetails.push(`${horseName} (€${horseAmount})`);
+    }
     
     // If no horses found, show debug
     if (totalAmount === 0) {
       return {
         statusCode: 200,
         headers: { 'Content-Type': 'text/html' },
-        body: `<h1>Debug - No Valid Horses</h1><pre>${JSON.stringify(params, null, 2)}</pre>`
+        body: `<h1>Still No Horses Found</h1><p>Looking for: horse1name, horse1package, etc.</p><pre>${JSON.stringify(params, null, 2)}</pre>`
       };
     }
     
@@ -89,7 +84,7 @@ exports.handler = async (event, context) => {
         'line_items[0][quantity]': '1',
         'success_url': 'https://bossmaremedia.com/booking-success',
         'cancel_url': 'https://bossmaremedia.com/booking-cancelled',
-        'customer_email': params['3ac'] || '', // Real email field ID
+        'customer_email': params.email || '',
         'automatic_tax[enabled]': 'true',
         'billing_address_collection': 'required'
       })
