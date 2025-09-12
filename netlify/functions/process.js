@@ -18,35 +18,58 @@ exports.handler = async (event, context) => {
       body: JSON.stringify(formData)
     });
 
-    const result = await response.json();
-    console.log('Full Zapier result:', result);
-
-    let checkoutUrl = null;
+    const result = await response.text(); // Get as text first
+    console.log('Raw response:', result);
     
-    if (typeof result === 'object') {
-      checkoutUrl = result.checkout_url || 
-                   result.url || 
-                   result.stripe_url ||
-                   result.payment_url;
+    // Try to parse as JSON
+    let jsonResult;
+    try {
+      jsonResult = JSON.parse(result);
+    } catch (e) {
+      // If it's not JSON, look for URL in the text
+      if (result.includes('pay.bossmaremedia.com')) {
+        const urlMatch = result.match(/(https:\/\/pay\.bossmaremedia\.com[^\s"'<>]+)/);
+        if (urlMatch) {
+          return {
+            statusCode: 302,
+            headers: { 'Location': urlMatch[1] }
+          };
+        }
+      }
     }
 
-    // Check for YOUR custom Stripe domain
-    if (checkoutUrl && (checkoutUrl.includes('checkout.stripe.com') || checkoutUrl.includes('pay.bossmaremedia.com'))) {
+    // If we got JSON, look for checkout_url
+    if (jsonResult && jsonResult.checkout_url) {
       return {
         statusCode: 302,
-        headers: { 'Location': checkoutUrl }
+        headers: { 'Location': jsonResult.checkout_url }
       };
     }
-    
+
+    // Search through all values for the URL
+    if (jsonResult && typeof jsonResult === 'object') {
+      for (const value of Object.values(jsonResult)) {
+        if (typeof value === 'string' && value.includes('pay.bossmaremedia.com')) {
+          return {
+            statusCode: 302,
+            headers: { 'Location': value }
+          };
+        }
+      }
+    }
+
+    // If all else fails, return debug info
     return {
-      statusCode: 302,
-      headers: { 'Location': 'https://www.bossmaremedia.com/contact' }
+      statusCode: 200,
+      headers: { 'Content-Type': 'text/html' },
+      body: `<h1>Debug</h1><pre>Raw: ${result}\nParsed: ${JSON.stringify(jsonResult, null, 2)}</pre>`
     };
     
   } catch (error) {
     return {
-      statusCode: 302,
-      headers: { 'Location': 'https://www.bossmaremedia.com/contact' }
+      statusCode: 500,
+      headers: { 'Content-Type': 'text/html' },
+      body: `<h1>Error</h1><p>${error.message}</p>`
     };
   }
 };
