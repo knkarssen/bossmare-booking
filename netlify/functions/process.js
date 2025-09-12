@@ -19,30 +19,38 @@ exports.handler = async (event, context) => {
     });
 
     const result = await response.json();
-    console.log('Zapier result:', result);
+    console.log('Full Zapier result:', result);
 
-    if (result.checkout_url) {
+    // Try to extract checkout URL from the Stripe step data
+    // The URL should be in the response somewhere
+    let checkoutUrl = null;
+    
+    if (typeof result === 'object') {
+      // Look for common Stripe checkout URL patterns
+      checkoutUrl = result.checkout_url || 
+                   result.url || 
+                   result.stripe_url ||
+                   result.payment_url;
+    }
+
+    if (checkoutUrl && checkoutUrl.includes('checkout.stripe.com')) {
       return {
         statusCode: 302,
-        headers: { 
-          'Location': result.checkout_url,
-          'Cache-Control': 'no-cache'
-        }
+        headers: { 'Location': checkoutUrl }
       };
     }
     
-    // If no checkout URL, show debug info
+    // If no checkout URL found, redirect to manual payment page
     return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'text/html' },
-      body: `<h1>Debug</h1><p>Response: ${JSON.stringify(result)}</p>`
+      statusCode: 302,
+      headers: { 'Location': 'https://www.bossmaremedia.com/contact' }
     };
     
   } catch (error) {
+    console.error('Error:', error);
     return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'text/html' },
-      body: `<h1>Error</h1><p>${error.message}</p>`
+      statusCode: 302,
+      headers: { 'Location': 'https://www.bossmaremedia.com/contact' }
     };
   }
 };
