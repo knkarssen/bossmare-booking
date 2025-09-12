@@ -14,39 +14,70 @@ exports.handler = async (event, context) => {
     
     // Fix the euro symbol encoding issue
     let packageName = params.package || 'Photography / Full Coverage - €500';
-    packageName = packageName.replace('â‚¬', '€');
+    packageName = packageName.replace(/â‚¬/g, '€'); // Fix all euro symbols
     
-    let totalAmount = 500;
+    let totalAmount = 500; // This should be a NUMBER
     
     // Simple matching
     if (packageName.includes('Full Coverage')) {
       totalAmount = 500;
     } else if (packageName.includes('2 Classes + Candids')) {
       totalAmount = 325;
-    } else if (packageName.includes('2 Classes')) {
+    } else if (packageName.includes('2 Classes') && !packageName.includes('Candids')) {
       totalAmount = 250;
     } else if (packageName.includes('1 Class')) {
       totalAmount = 175;
+    } else if (packageName.includes('Video') && packageName.includes('Reel + Clips')) {
+      totalAmount = 500;
     }
 
-    // For now, return debug instead of calling Stripe
+    // Add-ons
+    let addonName = params.addons || '';
+    addonName = addonName.replace(/â‚¬/g, '€');
+    
+    if (packageName.includes('Full Coverage') && addonName && addonName !== 'none') {
+      if (addonName.includes('Reel + Clips')) {
+        totalAmount += 350;
+      } else if (addonName.includes('Reel') && !addonName.includes('Clips')) {
+        totalAmount += 250;
+      } else if (addonName.includes('Clips') && !addonName.includes('Reel')) {
+        totalAmount += 150;
+      }
+    }
+
+    // Now call Stripe with the correct amount
+    const checkoutSession = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${STRIPE_SECRET_KEY}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        'mode': 'payment',
+        'line_items[0][price_data][currency]': 'eur',
+        'line_items[0][price_data][product_data][name]': `Photography Package - ${params.horse || 'Horse'}`,
+        'line_items[0][price_data][unit_amount]': (totalAmount * 100).toString(),
+        'line_items[0][quantity]': '1',
+        'success_url': 'https://bossmaremedia.com/booking-success',
+        'cancel_url': 'https://bossmaremedia.com/booking-cancelled',
+        'customer_email': params.email || '',
+        'automatic_tax[enabled]': 'true',
+        'billing_address_collection': 'required'
+      })
+    });
+
+    const session = await checkoutSession.json();
+    
     return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'text/html' },
-      body: `
-        <h1>Working!</h1>
-        <p><strong>Package:</strong> ${packageName}</p>
-        <p><strong>Calculated Amount:</strong> €${totalAmount}</p>
-        <p><strong>Horse:</strong> ${params.horse}</p>
-      `
+      statusCode: 302,
+      headers: { 'Location': session.url }
     };
 
   } catch (error) {
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'text/html' },
-      body: `<h1>Caught Error</h1><p>${error.message}</p><p>Stack: ${error.stack}</p>`
+      body: `<h1>Error</h1><p>${error.message}</p>`
     };
   }
 };
-
