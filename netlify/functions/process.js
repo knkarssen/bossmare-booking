@@ -1,18 +1,108 @@
 exports.handler = async (event, context) => {
-  const params = event.queryStringParameters || {};
-  
-  // Debug what the actual form sends
-  return {
-    statusCode: 200,
-    headers: { 'Content-Type': 'text/html' },
-    body: `
-      <h1>Real Form Debug</h1>
-      <p><strong>All Parameters:</strong></p>
-      <pre>${JSON.stringify(params, null, 2)}</pre>
-      <p><strong>Parameter Names:</strong></p>
-      <ul>
-        ${Object.keys(params).map(key => `<li>${key}: "${params[key]}"</li>`).join('')}
-      </ul>
-    `
-  };
+  try {
+    const params = event.queryStringParameters || {};
+    
+    const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+    
+    if (!STRIPE_SECRET_KEY) {
+      return {
+        statusCode: 500,
+        headers: { 'Content-Type': 'text/html' },
+        body: '<h1>Missing Stripe Key</h1>'
+      };
+    }
+    
+    let totalAmount = 0;
+    let productName = 'Photography Booking';
+    let horseDetails = [];
+    
+    // Process up to 5 horses
+    for (let i = 1; i <= 5; i++) {
+      const horseName = params[`horse${i}name`];
+      const horsePackage = params[`horse${i}package`];
+      const horseAddon = params[`horse${i}addon`];
+      
+      // Skip if no horse name or package
+      if (!horseName || !horsePackage) continue;
+      
+      // Clean up encoding
+      let packageName = horsePackage.replace(/â‚¬/g, '€');
+      let addonName = (horseAddon || '').replace(/â‚¬/g, '€');
+      
+      let horseAmount = 500; // default
+      
+      // Package pricing
+      if (packageName.includes('Full Coverage')) {
+        horseAmount = 500;
+      } else if (packageName.includes('2 Classes + Candids')) {
+        horseAmount = 325;
+      } else if (packageName.includes('2 Classes') && !packageName.includes('Candids')) {
+        horseAmount = 250;
+      } else if (packageName.includes('1 Class')) {
+        horseAmount = 175;
+      } else if (packageName.includes('Video') && packageName.includes('Reel')) {
+        horseAmount = 500;
+      }
+      
+      // Add-ons (only for Full Coverage)
+      if (packageName.includes('Full Coverage') && addonName) {
+        if (addonName.includes('Reel') && addonName.includes('Clips')) {
+          horseAmount += 350;
+        } else if (addonName.includes('Reel') && !addonName.includes('Clips')) {
+          horseAmount += 250;
+        } else if (addonName.includes('Clips') && !addonName.includes('Reel')) {
+          horseAmount += 150;
+        }
+      }
+      
+      totalAmount += horseAmount;
+      horseDetails.push(`${horseName} (€${horseAmount})`);
+    }
+    
+    // If no horses found, return error
+    if (totalAmount === 0) {
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'text/html' },
+        body: `<h1>Debug - No Horses Found</h1><pre>${JSON.stringify(params, null, 2)}</pre>`
+      };
+    }
+    
+    productName = `Photography Booking - ${horseDetails.join(', ')}`;
+
+    // Call Stripe
+    const checkoutSession = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${STRIPE_SECRET_KEY}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        'mode': 'payment',
+        'line_items[0][price_data][currency]': 'eur',
+        'line_items[0][price_data][product_data][name]': productName,
+        'line_items[0][price_data][unit_amount]': (totalAmount * 100).toString(),
+        'line_items[0][quantity]': '1',
+        'success_url': 'https://bossmaremedia.com/booking-success',
+        'cancel_url': 'https://bossmaremedia.com/booking-cancelled',
+        'customer_email': params.email || '',
+        'automatic_tax[enabled]': 'true',
+        'billing_address_collection': 'required'
+      })
+    });
+
+    const session = await checkoutSession.json();
+    
+    return {
+      statusCode: 302,
+      headers: { 'Location': session.url }
+    };
+
+  } catch (error) {
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'text/html' },
+      body: `<h1>Error</h1><p>${error.message}</p>`
+    };
+  }
 };
