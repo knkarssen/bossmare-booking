@@ -17,14 +17,14 @@ exports.handler = async (event, context) => {
 
     const selectedProducts = []
     const packages = {
-      'Photography / Full Coverage - €500': 'price_1S3wI72LaZerWfYwUMBCdcVa' //'prod_SzwAFokHYB3blK',
-      'Photography / 2 Classes Candids - €325': 'price_1S3wKN2LaZerWfYweJqzbfTz' //'prod_SzwCAn3jDCrxg7',
-      'Photography / 2 Classes - €250': 'price_1S3wLY2LaZerWfYwgW600Kg3' //'prod_SzwDGI4aGxixqf',
-      'Photography / 1 Class - €175': 'price_1S3wMc2LaZerWfYwZTNMtJu0' //'prod_SzwFkX8GxrJsh8',
-      'Video / Reel + Clips - €500': 'price_1S3wUp2LaZerWfYwogCGI8Ll' //'prod_SzwNEqoHYhs9PM',
+      'Photography / Full Coverage - €500': 'price_1S3wI72LaZerWfYwUMBCdcVa', //'prod_SzwAFokHYB3blK',
+      'Photography / 2 Classes Candids - €325': 'price_1S3wKN2LaZerWfYweJqzbfTz', //'prod_SzwCAn3jDCrxg7',
+      'Photography / 2 Classes - €250': 'price_1S3wLY2LaZerWfYwgW600Kg3', //'prod_SzwDGI4aGxixqf',
+      'Photography / 1 Class - €175': 'price_1S3wMc2LaZerWfYwZTNMtJu0', //'prod_SzwFkX8GxrJsh8',
+      'Video / Reel + Clips - €500': 'price_1S3wUp2LaZerWfYwogCGI8Ll', //'prod_SzwNEqoHYhs9PM',
 
-      'Video Add-On / Reel Clips - €350': 'price_1S3wQi2LaZerWfYwGvfnTKuc' //'prod_SzwJv8yAmQGh6b',
-      'Video Add-On / Reel - €250': 'price_1S3wPl2LaZerWfYwtqhZTUmg' //'prod_SzwI5Nn8zmdZZI',
+      'Video Add-On / Reel Clips - €350': 'price_1S3wQi2LaZerWfYwGvfnTKuc', //'prod_SzwJv8yAmQGh6b',
+      'Video Add-On / Reel - €250': 'price_1S3wPl2LaZerWfYwtqhZTUmg', //'prod_SzwI5Nn8zmdZZI',
       'Video Add-On / Clips - €150': 'price_1S3wOw2LaZerWfYwmtwMAod2' //'prod_SzwHgzMX9SzLXE'
     }
     console.log(packages)
