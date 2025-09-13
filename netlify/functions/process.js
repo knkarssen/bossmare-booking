@@ -27,11 +27,16 @@ exports.handler = async (event, context) => {
       'Video Add-On / Reel - €250': 'prod_SzwI5Nn8zmdZZI',
       'Video Add-On / Clips - €150': 'prod_SzwHgzMX9SzLXE'
     }
-    
+    console.log(packages)
+    console.log(params)
     for (let i = 1; i <= 5; i++) {
+      console.log(i)
       const horseName = params[`horse${i}name`];
       const horsePackage = params[`horse${i}package`];
       const horseAddon = params[`horse${i}addon`];
+      console.log(horseName)
+      console.log(horsePackage)
+      console.log(horseAddon)
       
       // Skip if no horse name or package
       if (!horseName || !horsePackage) continue;
@@ -39,9 +44,11 @@ exports.handler = async (event, context) => {
       // Clean up encoding
       let packageName = horsePackage.replace(/â‚¬/g, '€').replace(/\s+/g, ' ').trim();
       let addonName = (horseAddon || '').replace(/â‚¬/g, '€');
+      console.log(`${packageName in packages} '${packageName}' in packages`)
       if (packageName in packages) {
         selectedProducts.push(packages[packageName])
       }
+      console.log(`${addonName in packages} '${addonName}' in packages`)
       if (addonName in packages) {
         selectedProducts.push(packages[addonName])
       }
