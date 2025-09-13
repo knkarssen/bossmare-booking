@@ -55,9 +55,12 @@ exports.handler = async (event, context) => {
         'Authorization': `Bearer ${STRIPE_SECRET_KEY}`
       }
     });
-    const products = await checkoutSession1.json().data;
+    console.log("FETCH")
+    console.log(checkoutSession1)
+    const products = await checkoutSession1.json();
+    console.log("json")
     for (const pckge in packages) {
-      for (const product of Object.values(products)) {
+      for (const product of Object.values(products.data)) {
         console.log(`${packages[pckge] == product.id} ${packages[pckge]} == ${product.id}`)
         if (packages[pckge] == product.id) {
           console.log(product.default_price)
