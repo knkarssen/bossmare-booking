@@ -43,14 +43,17 @@ exports.handler = async (event, context) => {
       
       // Clean up encoding
       let packageName = horsePackage.replace(/â‚¬/g, '€').replace(/\s+/g, ' ').trim();
-      let addonName = (horseAddon || '').replace(/â‚¬/g, '€');
+      let addonName = (horseAddon || '').replace(/â‚¬/g, '€').replace(/\s+/g, ' ').trim();
       console.log(`${packageName in packages} '${packageName}' in packages`)
       if (packageName in packages) {
-        selectedProducts.push(packages[packageName])
+        const productId = packages[packageName]
+        console.log(`Push ${productId}`)
+        selectedProducts.push(productId)
       }
       console.log(`${addonName in packages} '${addonName}' in packages`)
       if (addonName in packages) {
-        selectedProducts.push(packages[addonName])
+        const productId = packages[addonName]
+        selectedProducts.push(productId)
       }
       
       let horseAmount = 500; // default
