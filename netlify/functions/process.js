@@ -98,6 +98,24 @@ exports.handler = async (event, context) => {
     // let productName = `Photography Booking - ${horseDetails.join(', ')}`;
     let productName = `Product IDs: (${selectedProducts.length}) ${selectedProducts.join(',')}`
 
+    let searchParams = {
+      'mode': 'payment',
+      // 'line_items[0][price_data][currency]': 'eur',
+      // 'line_items[0][price_data][product_data][name]': productName,
+      // 'line_items[0][price_data][unit_amount]': (totalAmount * 100).toString(),
+      // 'line_items[0][quantity]': '1',
+      'success_url': 'https://bossmaremedia.com/booking-success',
+      'cancel_url': 'https://bossmaremedia.com/booking-cancelled',
+      'customer_email': params.email || '',
+      'automatic_tax[enabled]': 'true',
+      'billing_address_collection': 'required'
+    }
+
+    for (let i = 0; i < selectedProducts.length; i++) {
+      searchParams[`line_items[${i}][price_data][product]`] = selectedProducts[i]
+      searchParams[`line_items[${i}][quantity]`] = 1
+    }
+
     // Call Stripe
     const checkoutSession = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
@@ -105,18 +123,7 @@ exports.handler = async (event, context) => {
         'Authorization': `Bearer ${STRIPE_SECRET_KEY}`,
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: new URLSearchParams({
-        'mode': 'payment',
-        'line_items[0][price_data][currency]': 'eur',
-        'line_items[0][price_data][product_data][name]': productName,
-        'line_items[0][price_data][unit_amount]': (totalAmount * 100).toString(),
-        'line_items[0][quantity]': '1',
-        'success_url': 'https://bossmaremedia.com/booking-success',
-        'cancel_url': 'https://bossmaremedia.com/booking-cancelled',
-        'customer_email': params.email || '',
-        'automatic_tax[enabled]': 'true',
-        'billing_address_collection': 'required'
-      })
+      body: new URLSearchParams(searchParams)
     });
 
     const session = await checkoutSession.json();
