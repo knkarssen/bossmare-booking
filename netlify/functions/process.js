@@ -16,19 +16,58 @@ exports.handler = async (event, context) => {
     let horseDetails = [];
 
     const selectedProducts = []
-    const packages = {
-      'Photography / Full Coverage - €500': 'price_1S3wI72LaZerWfYwUMBCdcVa', //'prod_SzwAFokHYB3blK',
-      'Photography / 2 Classes Candids - €325': 'price_1S3wKN2LaZerWfYweJqzbfTz', //'prod_SzwCAn3jDCrxg7',
-      'Photography / 2 Classes - €250': 'price_1S3wLY2LaZerWfYwgW600Kg3', //'prod_SzwDGI4aGxixqf',
-      'Photography / 1 Class - €175': 'price_1S3wMc2LaZerWfYwZTNMtJu0', //'prod_SzwFkX8GxrJsh8',
-      'Video / Reel + Clips - €500': 'price_1S3wUp2LaZerWfYwogCGI8Ll', //'prod_SzwNEqoHYhs9PM',
+    // const packages = {
+    //   'Photography / Full Coverage - €500': 'price_1S3wI72LaZerWfYwUMBCdcVa', //'prod_SzwAFokHYB3blK',
+    //   'Photography / 2 Classes Candids - €325': 'price_1S3wKN2LaZerWfYweJqzbfTz', //'prod_SzwCAn3jDCrxg7',
+    //   'Photography / 2 Classes - €250': 'price_1S3wLY2LaZerWfYwgW600Kg3', //'prod_SzwDGI4aGxixqf',
+    //   'Photography / 1 Class - €175': 'price_1S3wMc2LaZerWfYwZTNMtJu0', //'prod_SzwFkX8GxrJsh8',
+    //   'Video / Reel + Clips - €500': 'price_1S3wUp2LaZerWfYwogCGI8Ll', //'prod_SzwNEqoHYhs9PM',
 
-      'Video Add-On / Reel Clips - €350': 'price_1S3wQi2LaZerWfYwGvfnTKuc', //'prod_SzwJv8yAmQGh6b',
-      'Video Add-On / Reel - €250': 'price_1S3wPl2LaZerWfYwtqhZTUmg', //'prod_SzwI5Nn8zmdZZI',
-      'Video Add-On / Clips - €150': 'price_1S3wOw2LaZerWfYwmtwMAod2' //'prod_SzwHgzMX9SzLXE'
+    //   'Video Add-On / Reel Clips - €350': 'price_1S3wQi2LaZerWfYwGvfnTKuc', //'prod_SzwJv8yAmQGh6b',
+    //   'Video Add-On / Reel - €250': 'price_1S3wPl2LaZerWfYwtqhZTUmg', //'prod_SzwI5Nn8zmdZZI',
+    //   'Video Add-On / Clips - €150': 'price_1S3wOw2LaZerWfYwmtwMAod2' //'prod_SzwHgzMX9SzLXE'
+    // }
+    let packages = {
+      'Photography / Full Coverage - €500': 'prod_SzwAFokHYB3blK',
+      'Photography / 2 Classes Candids - €325': 'prod_SzwCAn3jDCrxg7',
+      'Photography / 2 Classes - €250': 'prod_SzwDGI4aGxixqf',
+      'Photography / 1 Class - €175': 'prod_SzwFkX8GxrJsh8',
+      'Video / Reel + Clips - €500': 'prod_SzwNEqoHYhs9PM',
+
+      'Video Add-On / Reel Clips - €350': 'prod_SzwJv8yAmQGh6b',
+      'Video Add-On / Reel - €250': 'prod_SzwI5Nn8zmdZZI',
+      'Video Add-On / Clips - €150': 'prod_SzwHgzMX9SzLXE'
     }
     console.log(packages)
     console.log(params)
+
+    const searchParams2 = {}
+
+    for (const idx in Object.values(packages)) {
+      searchParams2[`ids[${idx}]`] = packages[idx]
+    }
+    console.log(searchParams2)
+
+    const checkoutSession1 = await fetch('https://api.stripe.com/v1/products', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${STRIPE_SECRET_KEY}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams(searchParams2)
+    });
+    const products = await checkoutSession1.json().data;
+    for (const pckge in packages) {
+      for (const product of products) {
+        if (packages[pckge] == product.id) {
+          packages[pckge] = product.default_price
+          break 
+        }
+      }
+    }
+    console.log("NEW DICT")
+    console.log(packages)
+
     for (let i = 1; i <= 5; i++) {
       console.log(i)
       const horseName = params[`horse${i}name`];
@@ -55,49 +94,9 @@ exports.handler = async (event, context) => {
         const priceId = packages[addonName]
         selectedProducts.push(priceId)
       }
-      
-      // let horseAmount = 500; // default
-      
-      // // Package pricing (handle extra spaces)
-      // if (packageName.includes('Full Coverage')) {
-      //   horseAmount = 500;
-      // } else if (packageName.includes('2 Classes') && packageName.includes('Candids')) {
-      //   horseAmount = 325;
-      // } else if (packageName.includes('2 Classes') && !packageName.includes('Candids')) {
-      //   horseAmount = 250;
-      // } else if (packageName.includes('1 Class')) {
-      //   horseAmount = 175;
-      // } else if (packageName.includes('Video') && packageName.includes('Reel')) {
-      //   horseAmount = 500;
-      // }
-      
-      // // Add-ons (only for Full Coverage)
-      // if (packageName.includes('Full Coverage') && addonName) {
-      //   if (addonName.includes('Reel') && addonName.includes('Clips')) {
-      //     horseAmount += 350;
-      //   } else if (addonName.includes('Reel') && !addonName.includes('Clips')) {
-      //     horseAmount += 250;
-      //   } else if (addonName.includes('Clips') && !addonName.includes('Reel')) {
-      //     horseAmount += 150;
-      //   }
-      // }
-      
-      // totalAmount += horseAmount;
-      // horseDetails.push(`${horseName} (€${horseAmount})`);
+
     }
     
-    // // If no horses found, show debug
-    // if (totalAmount === 0) {
-    //   return {
-    //     statusCode: 200,
-    //     headers: { 'Content-Type': 'text/html' },
-    //     body: `<h1>Still No Horses Found</h1><p>Looking for: horse1name, horse1package, etc.</p><pre>${JSON.stringify(params, null, 2)}</pre>`
-    //   };
-    // }
-    
-    // let productName = `Photography Booking - ${horseDetails.join(', ')}`;
-    let productName = `Product IDs: (${selectedProducts.length}) ${selectedProducts.join(',')}`
-
     let searchParams = {
       'mode': 'payment',
       'success_url': 'https://bossmaremedia.com/booking-success',
@@ -109,10 +108,6 @@ exports.handler = async (event, context) => {
     }
 
     for (let i = 0; i < selectedProducts.length; i++) {
-      // searchParams[`line_items[${i}][price_data][currency]`] = 'eur'
-      // searchParams[`line_items[${i}][price_data][product]`] = selectedProducts[i]
-      // searchParams[`line_items[${i}][price_data][unit_amount]`] = 
-      // searchParams[`line_items[${i}][price_data][tax_behavior]`] = 'exclusive'
       searchParams[`line_items[${i}][price]`] = selectedProducts[i]
       searchParams[`line_items[${i}][quantity]`] = 1
     }
