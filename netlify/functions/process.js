@@ -28,7 +28,6 @@ exports.handler = async (event, context) => {
       'Video Add-On / Clips - €150': 'prod_SzwHgzMX9SzLXE'
     }
     
-    // Process up to 5 horses using CORRECT field names
     for (let i = 1; i <= 5; i++) {
       const horseName = params[`horse${i}name`];
       const horsePackage = params[`horse${i}package`];
@@ -87,7 +86,7 @@ exports.handler = async (event, context) => {
     }
     
     // let productName = `Photography Booking - ${horseDetails.join(', ')}`;
-    let productName = `Product IDs: ${selectedProducts.join(',')}`
+    let productName = `Product IDs: (${selectedProducts.length}) ${selectedProducts.join(',')}`
 
     // Call Stripe
     const checkoutSession = await fetch('https://api.stripe.com/v1/checkout/sessions', {
