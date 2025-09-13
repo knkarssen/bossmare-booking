@@ -42,8 +42,8 @@ exports.handler = async (event, context) => {
       if (!horseName || !horsePackage) continue;
       
       // Clean up encoding
-      let packageName = horsePackage//.replace(/â‚¬/g, '€').replace(/\s+/g, ' ').trim();
-      let addonName = (horseAddon || '')//.replace(/â‚¬/g, '€');
+      let packageName = horsePackage.replace(/â‚¬/g, '€').replace(/\s+/g, ' ').trim();
+      let addonName = (horseAddon || '').replace(/â‚¬/g, '€');
       console.log(`${packageName in packages} '${packageName}' in packages`)
       if (packageName in packages) {
         selectedProducts.push(packages[packageName])
