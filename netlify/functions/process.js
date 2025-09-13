@@ -114,7 +114,7 @@ exports.handler = async (event, context) => {
     for (let i = 0; i < selectedProducts.length; i++) {
       searchParams[`line_items[${i}][price_data][currency]`] = 'eur'
       searchParams[`line_items[${i}][price_data][product]`] = selectedProducts[i]
-      searchParams[`line_items[${i}][quantity]`] = 1
+      searchParams[`line_items[${i}][price_data][unit_amount]`] = 1
     }
 
     console.log(searchParams)
