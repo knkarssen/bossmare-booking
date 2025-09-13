@@ -57,8 +57,10 @@ exports.handler = async (event, context) => {
     });
     const products = await checkoutSession1.json().data;
     for (const pckge in packages) {
-      for (const product of products) {
+      for (const product of Object.values(products)) {
+        console.log(`${packages[pckge] == product.id} ${packages[pckge]} == ${product.id}`)
         if (packages[pckge] == product.id) {
+          console.log(product.default_price)
           packages[pckge] = product.default_price
           break 
         }
