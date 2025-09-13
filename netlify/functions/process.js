@@ -115,7 +115,7 @@ exports.handler = async (event, context) => {
       searchParams[`line_items[${i}][price_data][currency]`] = 'eur'
       searchParams[`line_items[${i}][price_data][product]`] = selectedProducts[i]
       searchParams[`line_items[${i}][price_data][unit_amount]`] = 1
-      searchParams[`line_items[${i}][price_data][unit_amount]`] = 'exclusive'
+      searchParams[`line_items[${i}][price_data][tax_behavior]`] = 'exclusive'
       searchParams[`line_items[${i}][quantity]`] = 1
     }
 
