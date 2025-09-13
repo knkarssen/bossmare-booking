@@ -41,20 +41,19 @@ exports.handler = async (event, context) => {
     console.log(packages)
     console.log(params)
 
-    const searchParams2 = {}
+    const query = []
 
     for (const idx in Object.values(packages)) {
-      searchParams2[`ids[${idx}]`] = packages[idx]
+      query.push(`ids[${idx}]=${packages[idx]}`)
     }
-    console.log(searchParams2)
+    console.log(query)
 
-    const checkoutSession1 = await fetch('https://api.stripe.com/v1/products', {
+    const checkoutSession1 = await fetch(`https://api.stripe.com/v1/products?${query.join('&')}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${STRIPE_SECRET_KEY}`,
         'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: new URLSearchParams(searchParams2)
+      }
     });
     const products = await checkoutSession1.json().data;
     for (const pckge in packages) {
