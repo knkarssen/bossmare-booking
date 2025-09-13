@@ -41,10 +41,10 @@ exports.handler = async (event, context) => {
       let packageName = horsePackage.replace(/â‚¬/g, '€').replace(/\s+/g, ' ').trim();
       let addonName = (horseAddon || '').replace(/â‚¬/g, '€');
       if (packageName in packages) {
-        selectedProducts.append(packages[packageName])
+        selectedProducts.push(packages[packageName])
       }
       if (addonName in packages) {
-        selectedProducts.append(packages[addonName])
+        selectedProducts.push(packages[addonName])
       }
       
       let horseAmount = 500; // default
