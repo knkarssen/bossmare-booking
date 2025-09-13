@@ -52,8 +52,7 @@ exports.handler = async (event, context) => {
     const checkoutSession1 = await fetch(`https://api.stripe.com/v1/products?${query.join('&')}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${STRIPE_SECRET_KEY}`,
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Authorization': `Bearer ${STRIPE_SECRET_KEY}`
       }
     });
     const products = await checkoutSession1.json().data;
