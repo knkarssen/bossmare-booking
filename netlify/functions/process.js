@@ -14,6 +14,19 @@ exports.handler = async (event, context) => {
     
     let totalAmount = 0;
     let horseDetails = [];
+
+    const selectedProducts = []
+    const packages = {
+      'Photography / Full Coverage - €500': 'prod_SzwAFokHYB3blK',
+      'Photography / 2 Classes + Candids - €325': 'prod_SzwCAn3jDCrxg7',
+      'Photography / 2 Classes - €250': 'prod_SzwDGI4aGxixqf',
+      'Photography / 1 Class - €175': 'prod_SzwFkX8GxrJsh8',
+      'Video / Reel + Clips - €500': 'prod_SzwNEqoHYhs9PM',
+
+      'Video Add-On / Reel + Clips - €350': 'prod_SzwJv8yAmQGh6b',
+      'Video Add-On / Reel - €250': 'prod_SzwI5Nn8zmdZZI',
+      'Video Add-On / Clips - €150': 'prod_SzwHgzMX9SzLXE'
+    }
     
     // Process up to 5 horses using CORRECT field names
     for (let i = 1; i <= 5; i++) {
@@ -27,6 +40,12 @@ exports.handler = async (event, context) => {
       // Clean up encoding
       let packageName = horsePackage.replace(/â‚¬/g, '€').replace(/\s+/g, ' ').trim();
       let addonName = (horseAddon || '').replace(/â‚¬/g, '€');
+      if (packageName in packages) {
+        selectedProducts.append(packages[packageName])
+      }
+      if (addonName in packages) {
+        selectedProducts.append(packages[addonName])
+      }
       
       let horseAmount = 500; // default
       
@@ -67,7 +86,8 @@ exports.handler = async (event, context) => {
       };
     }
     
-    let productName = `Photography Booking - ${horseDetails.join(', ')}`;
+    // let productName = `Photography Booking - ${horseDetails.join(', ')}`;
+    let productName = `Product IDs: ${selectedProducts.join(',')}`
 
     // Call Stripe
     const checkoutSession = await fetch('https://api.stripe.com/v1/checkout/sessions', {
