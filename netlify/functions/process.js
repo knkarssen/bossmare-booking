@@ -43,8 +43,9 @@ exports.handler = async (event, context) => {
 
     const query = []
 
-    for (const idx in Object.values(packages)) {
-      query.push(`ids[${idx}]=${packages[idx]}`)
+    const values = Object.values(packages)
+    for (const idx in values) {
+      query.push(`ids[${idx}]=${values[idx]}`)
     }
     console.log(query)
 
