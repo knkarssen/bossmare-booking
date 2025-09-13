@@ -104,8 +104,8 @@ exports.handler = async (event, context) => {
       'cancel_url': 'https://bossmaremedia.com/booking-cancelled',
       'customer_email': params.email || '',
       'automatic_tax[enabled]': 'true',
-      'tax_id_collection[enabled]': true
-      'billing_address_collection': 'required',
+      'tax_id_collection[enabled]': true,
+      'billing_address_collection': 'required'
     }
 
     for (let i = 0; i < selectedProducts.length; i++) {
