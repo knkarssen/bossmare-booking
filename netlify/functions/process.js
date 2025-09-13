@@ -18,12 +18,12 @@ exports.handler = async (event, context) => {
     const selectedProducts = []
     const packages = {
       'Photography / Full Coverage - €500': 'prod_SzwAFokHYB3blK',
-      'Photography / 2 Classes   Candids - €325': 'prod_SzwCAn3jDCrxg7',
+      'Photography / 2 Classes Candids - €325': 'prod_SzwCAn3jDCrxg7',
       'Photography / 2 Classes - €250': 'prod_SzwDGI4aGxixqf',
       'Photography / 1 Class - €175': 'prod_SzwFkX8GxrJsh8',
       'Video / Reel + Clips - €500': 'prod_SzwNEqoHYhs9PM',
 
-      'Video Add-On / Reel   Clips - €350': 'prod_SzwJv8yAmQGh6b',
+      'Video Add-On / Reel Clips - €350': 'prod_SzwJv8yAmQGh6b',
       'Video Add-On / Reel - €250': 'prod_SzwI5Nn8zmdZZI',
       'Video Add-On / Clips - €150': 'prod_SzwHgzMX9SzLXE'
     }
